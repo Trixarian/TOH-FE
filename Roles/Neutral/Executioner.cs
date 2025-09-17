@@ -1,5 +1,6 @@
 using Hazel;
 using TOHFE.Modules.Rpc;
+using TOHFE.Roles.AddOns.Common;
 using TOHFE.Roles.Core;
 using static TOHFE.Options;
 
@@ -97,7 +98,7 @@ internal class Executioner : RoleBase
                 else if (!CanTargetNeutralChaos.GetBool() && target.GetCustomRole().IsNC()) continue;
                 else if (!CanTargetCoven.GetBool() && target.Is(Custom_Team.Coven)) continue;
                 if (target.GetCustomRole() is CustomRoles.GM or CustomRoles.SuperStar or CustomRoles.NiceMini or CustomRoles.EvilMini or CustomRoles.Solsticer or CustomRoles.Workaholic) continue;
-                if (executioner.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) continue;
+                if (Lovers.AreLovers(executioner, target)) continue;
 
                 targetList.Add(target);
             }

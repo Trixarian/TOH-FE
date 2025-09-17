@@ -1,3 +1,5 @@
+using TOHFE.Roles.Neutral;
+
 namespace TOHFE.Roles.Impostor;
 
 internal class Visionary : RoleBase
@@ -19,6 +21,8 @@ internal class Visionary : RoleBase
         if (!seer.IsAlive() || !target.IsAlive() || target.Data.IsDead) return string.Empty;
 
         var customRole = target.GetCustomRole();
+
+        if (Lich.IsCursed(target)) return "7f8c8d";
 
         foreach (var SubRole in target.GetCustomSubRoles())
         {

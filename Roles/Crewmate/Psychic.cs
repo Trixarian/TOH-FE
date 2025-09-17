@@ -2,6 +2,7 @@ using Hazel;
 using TOHFE.Modules.Rpc;
 using TOHFE.Roles.Core;
 using TOHFE.Roles.Coven;
+using TOHFE.Roles.Neutral;
 using static TOHFE.Options;
 using static TOHFE.Utils;
 
@@ -103,7 +104,7 @@ internal class Psychic : RoleBase
         (x.GetCustomRole().IsNC() && NCshowEvil.GetBool()) ||
         (x.GetCustomRole().IsNB() && NBshowEvil.GetBool()) ||
         (x.GetCustomRole().IsNK() && NKshowEvil.GetBool()) ||
-        (x.GetCustomRole().IsNA() && NAshowEvil.GetBool()) ||
+        ((x.GetCustomRole().IsNA() || Lich.IsCursed(x)) && NAshowEvil.GetBool()) ||
         (x.GetCustomRole().IsCoven() && CovshowEvil.GetBool())
         )];
 

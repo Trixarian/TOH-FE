@@ -1,6 +1,7 @@
 using Hazel;
 using TOHFE.Modules.Rpc;
 using TOHFE.Roles.Coven;
+using TOHFE.Roles.Neutral;
 using UnityEngine;
 using static TOHFE.Options;
 using static TOHFE.Translator;
@@ -103,7 +104,7 @@ internal class Snitch : RoleBase
     private static bool IsSnitchTarget(PlayerControl target)
         => HasEnabled && ((target.GetCustomRole().IsImpostorTeamV3() && !target.Is(CustomRoles.Trickster) && !target.Is(CustomRoles.Narc))
         || (target.IsNeutralKiller() && CanFindNeutralKiller)
-        || (target.IsNeutralApocalypse() && CanFindNeutralApocalypse)
+        || ((target.IsNeutralApocalypse() || Lich.IsCursed(target)) && CanFindNeutralApocalypse)
         || (target.IsPlayerCoven() && CanFindCoven)
         || ((target.Is(CustomRoles.Madmate) || target.Is(CustomRoles.Rascal)) && CanFindMadmate));
 

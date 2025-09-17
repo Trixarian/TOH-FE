@@ -987,9 +987,12 @@ public class RoleAssign
         if (Covs.Any()) Logger.Info(string.Join(", ", Covs.Select(x => $"{x.Role} - {x.AssignedCount}/{x.MaxCount} ({x.SpawnChance}%)")), "CovRoleResult");
         if (Crews.Any()) Logger.Info(string.Join(", ", Crews.Select(x => $"{x.Role} - {x.AssignedCount}/{x.MaxCount} ({x.SpawnChance}%)")), "CrewRoleResult");
 
-        if (Sunnyboy.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Jester)) FinalRolesList.Add(CustomRoles.Sunnyboy);
-        if (Bard.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Arrogance)) FinalRolesList.Add(CustomRoles.Bard);
-        if (Requiter.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Knight)) FinalRolesList.Add(CustomRoles.Requiter);
+        if (!Options.DisableHiddenRoles.GetBool())
+        {
+            while (Sunnyboy.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Jester)) FinalRolesList.Add(CustomRoles.Sunnyboy);
+            while (Bard.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Arrogance)) FinalRolesList.Add(CustomRoles.Bard);
+            while (Requiter.CheckSpawn() && FinalRolesList.Remove(CustomRoles.Knight)) FinalRolesList.Add(CustomRoles.Requiter);
+        }
 
         if (Romantic.HasEnabled)
         {
@@ -1046,6 +1049,9 @@ public class RoleAssign
     public static int AddNoisemakerNum;
     public static int AddPhantomNum;
     public static int AddTrackerNum;
+    public static int AddDetectiveNum;
+    public static int AddViperNum;
+
     public static void CalculateVanillaRoleCount()
     {
         // Calculate the number of base roles
@@ -1055,6 +1061,9 @@ public class RoleAssign
         AddNoisemakerNum = 0;
         AddPhantomNum = 0;
         AddTrackerNum = 0;
+        AddDetectiveNum = 0;
+        AddViperNum = 0;
+
         foreach (var role in AllRoles)
         {
             switch (role.GetVNRole())
@@ -1076,6 +1085,12 @@ public class RoleAssign
                     break;
                 case CustomRoles.Tracker:
                     AddTrackerNum++;
+                    break;
+                case CustomRoles.Viper:
+                    AddViperNum++;
+                    break;
+                case CustomRoles.Detective:
+                    AddDetectiveNum++;
                     break;
             }
         }

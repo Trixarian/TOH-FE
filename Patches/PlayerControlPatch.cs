@@ -1,5 +1,7 @@
 using AmongUs.GameOptions;
+using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
+using InnerNet;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -1032,9 +1034,9 @@ class FixedUpdateInNormalGamePatch
         byte playerId = player.PlayerId;
 
         var playerData = player.Data;
-        var playerClientId = player.GetClientId();
+        var playerClientId = player?.GetClientId() ?? byte.MaxValue;
 
-        bool playerAmOwner = player.AmOwner;
+        bool playerAmOwner = player?.AmOwner ?? false;
         var amongUsClient = AmongUsClient.Instance;
         bool amHost = amongUsClient.AmHost;
 
@@ -1184,7 +1186,7 @@ class FixedUpdateInNormalGamePatch
                         CovenManager.NecronomiconCheck();
 
                         if (CustomRoles.Lovers.IsEnable())
-                            LoversSuicide();
+                            Lovers.OnFixedUpdate(player, lowLoad, nowTime, timerLowLoad);
 
                         if (Rainbow.IsEnabled && Main.IntroDestroyed)
                             Rainbow.OnFixedUpdate();
@@ -1333,15 +1335,28 @@ class FixedUpdateInNormalGamePatch
                 if (Illusionist.IsNonCovIllusioned(playerId))
                 {
                     var randomRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCoven()).ToList().RandomElement();
-                    blankRT.Clear().Append(randomRole.GetColoredTextByRole(GetString(randomRole.ToString())));
+                    blankRT.Clear().Append(randomRole.ToColoredString());
                     if (randomRole is CustomRoles.CovenLeader or CustomRoles.Jinx or CustomRoles.Illusionist or CustomRoles.VoodooMaster) // Roles with Ability Uses
                     {
                         blankRT.Append(randomRole.GetStaticRoleClass().GetProgressText(localPlayerId, false));
                     }
                     result.Clear().Append($"<size=1.3>{blankRT}</size>");
                 }
+                // if (Lich.IsCursed(player) && Lich.IsDeceived(localPlayer, player))
+                // {
+                //     blankRT.Clear().Append(CustomRoles.Lich.ToColoredString());
+                //     blankRT.Append(CustomRoles.Lich.GetStaticRoleClass().GetProgressText(localPlayerId, false));
+                //     result.Clear().Append($"<size=1.3>{blankRT}</size>");
+                // }
                 roleText.text = result.ToString();
             }
+
+            // if (localPlayer.IsAlive() && Lich.IsCursed(player) && Lich.IsDeceived(localPlayer, player))
+            // {
+            //     StringBuilder blankRT = new(CustomRoles.Lich.ToColoredString());
+            //     blankRT.Append(CustomRoles.Lich.GetStaticRoleClass().GetProgressText(localPlayerId, false));
+            //     roleText.text = $"<size=1.3>{blankRT}</size>";
+            // }
 
             if (!amongUsClient.IsGameStarted && amongUsClient.NetworkMode != NetworkModes.FreePlay)
             {
@@ -1349,6 +1364,9 @@ class FixedUpdateInNormalGamePatch
                 if (!playerAmOwner)
                     player.cosmetics.nameText.text = playerData?.PlayerName;
             }
+
+            if (!roleText.isActiveAndEnabled && roleText.enabled)
+                roleText.gameObject.SetActive(true);
 
             if (Main.VisibleTasksCount)
                 roleText.text += Utils.GetProgressText(player);
@@ -1428,14 +1446,15 @@ class FixedUpdateInNormalGamePatch
                     if (player.Is(CustomRoles.Cyber) && Cyber.CyberKnown.GetBool())
                         Mark.Append(CustomRoles.Cyber.GetColoredTextByRole("★"));
 
-                    if (player.Is(CustomRoles.Lovers) && localPlayer.Is(CustomRoles.Lovers))
-                    {
-                        Mark.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
-                    }
-                    else if (player.Is(CustomRoles.Lovers) && localPlayer.Data.IsDead)
-                    {
-                        Mark.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
-                    }
+                    Mark.Append(Lovers.GetMarkOthers(localPlayer, player));
+                    // if (player.Is(CustomRoles.Lovers) && localPlayer.Is(CustomRoles.Lovers))
+                    // {
+                    //     Mark.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
+                    // }
+                    // else if (player.Is(CustomRoles.Lovers) && localPlayer.Data.IsDead)
+                    // {
+                    //     Mark.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
+                    // }
                     break;
             }
 
@@ -1466,7 +1485,7 @@ class FixedUpdateInNormalGamePatch
                 ? $"\n<size=1.7>『{CustomRoles.Doctor.GetColoredTextByRole(Utils.GetVitalText(playerId))}』</size>" : string.Empty);
 
             // code from EHR (Endless Host Roles by: Gurge44)
-            var currentText = player.cosmetics.nameText.text;
+            var currentText = player?.cosmetics?.nameText?.text ?? "";
             var changeTo = $"{RealName}{DeathReason}{Mark}\r\n{Suffix}";
             bool needUpdate = currentText != changeTo;
 
@@ -1494,64 +1513,66 @@ class FixedUpdateInNormalGamePatch
                 }
                 if (!localPlayer.IsAlive() && !player.IsAlive()) { offset += 0.1f; colorBlind -= 0.1f; }
 
-                roleText.transform.SetLocalY(offset);
-                player.cosmetics.colorBlindText.transform.SetLocalY(colorBlind);
+                roleText?.transform?.SetLocalY(offset);
+                player?.cosmetics?.colorBlindText?.transform?.SetLocalY(colorBlind);
             }
+            // Logger.Info($"Role Name for {player.GetRealName()}: {roleText.text}; is enabled: {roleText.enabled}; {roleText.fontSize}", "FixedUpdateInNormalGame.DoPostfix");
         }
         else
         {
             roleText.transform.SetLocalY(0.2f);
-            player.cosmetics.colorBlindText.transform.SetLocalY(-0.32f);
+            player?.cosmetics?.colorBlindText?.transform?.SetLocalY(-0.32f);
         }
     }
-    public static void LoversSuicide(byte deathId = 0x7f, bool isExiled = false)
-    {
-        if (Options.LoverSuicide.GetBool() && Main.isLoversDead == false)
-        {
-            foreach (var loversPlayer in Main.LoversPlayers.ToArray())
-            {
-                if (loversPlayer.IsAlive() && loversPlayer.PlayerId != deathId) continue;
+    // public static void LoversSuicide(byte deathId = 0x7f, bool isExiled = false)
+    // {
+    //     if (Options.LoverSuicide.GetBool() && Main.isLoversDead == false)
+    //     {
+    //         foreach (var loversPlayer in Main.LoversPlayers.ToArray())
+    //         {
+    //             if (!loversPlayer.Is(CustomRoles.Lovers)) continue;
+    //             if (loversPlayer.IsAlive() && loversPlayer.PlayerId != deathId) continue;
 
-                Main.isLoversDead = true;
-                foreach (var partnerPlayer in Main.LoversPlayers.ToArray())
-                {
-                    if (loversPlayer.PlayerId == partnerPlayer.PlayerId) continue;
+    //             Main.isLoversDead = true;
+    //             foreach (var partnerPlayer in Main.LoversPlayers.ToArray())
+    //             {
+    //                 if (loversPlayer.PlayerId == partnerPlayer.PlayerId) continue;
 
-                    if (partnerPlayer.PlayerId != deathId && partnerPlayer.IsAlive())
-                    {
-                        if (partnerPlayer.Is(CustomRoles.Lovers))
-                        {
-                            partnerPlayer.SetDeathReason(PlayerState.DeathReason.FollowingSuicide);
+    //                 if (partnerPlayer.PlayerId != deathId && partnerPlayer.IsAlive())
+    //                 {
+    //                     if (partnerPlayer.Is(CustomRoles.Lovers))
+    //                     {
+    //                         partnerPlayer.SetDeathReason(PlayerState.DeathReason.FollowingSuicide);
 
-                            if (isExiled)
-                            {
-                                if (Main.PlayersDiedInMeeting.Contains(deathId))
-                                {
-                                    partnerPlayer.Data.IsDead = true;
-                                    partnerPlayer.RpcExileV2();
-                                    Main.PlayerStates[partnerPlayer.PlayerId].SetDead();
-                                    if (MeetingHud.Instance?.state is MeetingHud.VoteStates.Discussion or MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)
-                                    {
-                                        MeetingHud.Instance?.CheckForEndVoting();
-                                    }
-                                    MurderPlayerPatch.AfterPlayerDeathTasks(partnerPlayer, partnerPlayer, true);
-                                    _ = new LateTask(() => HudManager.Instance?.SetHudActive(false), 0.3f, "SetHudActive in LoversSuicide", shoudLog: false);
-                                }
-                                else
-                                {
-                                    CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.FollowingSuicide, partnerPlayer.PlayerId);
-                                }
-                            }
-                            else
-                            {
-                                partnerPlayer.RpcMurderPlayer(partnerPlayer);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //                         if (isExiled)
+    //                         {
+    //                             if (Main.PlayersDiedInMeeting.Contains(deathId))
+    //                             {
+    //                                 partnerPlayer.Data.IsDead = true;
+    //                                 partnerPlayer.RpcExileV2();
+    //                                 Main.PlayerStates[partnerPlayer.PlayerId].SetDead();
+    //                                 if (MeetingHud.Instance?.state is MeetingHud.VoteStates.Discussion or MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)
+    //                                 {
+    //                                     MeetingHud.Instance?.CheckForEndVoting();
+    //                                 }
+    //                                 MurderPlayerPatch.AfterPlayerDeathTasks(partnerPlayer, partnerPlayer, true);
+    //                                 _ = new LateTask(() => HudManager.Instance?.SetHudActive(false), 0.3f, "SetHudActive in LoversSuicide", shoudLog: false);
+    //                             }
+    //                             else
+    //                             {
+    //                                 CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.FollowingSuicide, partnerPlayer.PlayerId);
+    //                             }
+    //                         }
+    //                         else
+    //                         {
+    //                             partnerPlayer.RpcMurderPlayer(partnerPlayer);
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 [HarmonyPatch(typeof(PlayerControl._Start_d__82), nameof(PlayerControl._Start_d__82.MoveNext))]
 class PlayerStartPatch
@@ -1575,53 +1596,60 @@ class PlayerStartPatch
     }
 }
 // Player press vent button
-[HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.CoEnterVent))]
+[HarmonyPatch(typeof(PlayerPhysics._CoEnterVent_d__47), nameof(PlayerPhysics._CoEnterVent_d__47.MoveNext))]
 class CoEnterVentPatch
 {
-    public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
+    public static bool Prefix(PlayerPhysics._CoEnterVent_d__47 __instance)
     {
+        if (__instance.__1__state >= 1) return true; // track the start of function
+
+        if (MeetingHud.Instance) return true; // vent action will be canceled if a meeting is called
+
+        var instance = __instance.__4__this;
+        var id = __instance.id;
+
         if (!AmongUsClient.Instance.AmHost || GameStates.IsHideNSeek) return true;
-        Logger.Info($" {__instance.myPlayer.GetNameWithRole().RemoveHtmlTags()}, Vent ID: {id}", "CoEnterVent");
+        Logger.Info($" {instance.myPlayer.GetNameWithRole().RemoveHtmlTags()}, Vent ID: {id}", "CoEnterVent");
 
         //FFA
-        if (Options.CurrentGameMode == CustomGameMode.FFA && FFAManager.CheckCoEnterVent(__instance, id))
+        if (Options.CurrentGameMode == CustomGameMode.FFA && FFAManager.CheckCoEnterVent(instance, id))
         {
             return true;
         }
 
-        if (KillTimerManager.AllKillTimers.TryGetValue(__instance.myPlayer.PlayerId, out var timer))
+        if (KillTimerManager.AllKillTimers.TryGetValue(instance.myPlayer.PlayerId, out var timer))
         {
-            KillTimerManager.AllKillTimers[__instance.myPlayer.PlayerId] = timer + 0.5f;
+            KillTimerManager.AllKillTimers[instance.myPlayer.PlayerId] = timer + 0.5f;
         }
 
         if (AntiBlackout.SkipTasks)
         {
-            Logger.Warn($"AntiBlackout SkipTasks is enabled, {__instance.myPlayer.GetNameWithRole().RemoveHtmlTags()} can't enter vent", "CoEnterVent");
-            _ = new LateTask(() => __instance?.RpcBootFromVent(id), 0.5f, "Prevent Enter Vents");
+            Logger.Warn($"AntiBlackout SkipTasks is enabled, {instance.myPlayer.GetNameWithRole().RemoveHtmlTags()} can't enter vent", "CoEnterVent");
+            _ = new LateTask(() => instance?.RpcBootFromVent(id), 0.5f, "Prevent Enter Vents");
             return true;
         }
 
         // Check others enter to vent
-        if (CustomRoleManager.OthersCoEnterVent(__instance, id))
+        if (CustomRoleManager.OthersCoEnterVent(instance, id))
         {
             return true;
         }
 
-        var playerRoleClass = __instance.myPlayer.GetRoleClass();
+        var playerRoleClass = instance.myPlayer.GetRoleClass();
 
         // Prevent vanilla players from enter vents if their current role does not allow it
-        if (!__instance.myPlayer.CanUseVents() || (playerRoleClass != null && playerRoleClass.CheckBootFromVent(__instance, id))
+        if (!instance.myPlayer.CanUseVents() || (playerRoleClass != null && playerRoleClass.CheckBootFromVent(instance, id))
         )
         {
-            _ = new LateTask(() => __instance?.RpcBootFromVent(id), 0.5f, "Prevent Enter Vents");
+            _ = new LateTask(() => instance?.RpcBootFromVent(id), 0.5f, "Prevent Enter Vents");
             return true;
         }
 
 
-        playerRoleClass?.OnCoEnterVent(__instance, id);
+        playerRoleClass?.OnCoEnterVent(instance, id);
         if (Options.DisableVenting1v1.GetBool() && Main.AllAlivePlayerControls.Length <= 2)
         {
-            var pc = __instance?.myPlayer;
+            var pc = instance?.myPlayer;
             _ = new LateTask(() =>
             {
                 pc?.Notify(GetString("FFA-NoVentingBecauseTwoPlayers"), 7f);
@@ -1630,11 +1658,11 @@ class CoEnterVentPatch
             return true;
         }
 
-        if (playerRoleClass?.BlockMoveInVent(__instance.myPlayer) ?? false)
+        if (playerRoleClass?.BlockMoveInVent(instance.myPlayer) ?? false)
         {
             foreach (var ventId in playerRoleClass.LastBlockedMoveInVentVents)
             {
-                CustomRoleManager.BlockedVentsList[__instance.myPlayer.PlayerId].Remove(ventId);
+                CustomRoleManager.BlockedVentsList[instance.myPlayer.PlayerId].Remove(ventId);
             }
             playerRoleClass.LastBlockedMoveInVentVents.Clear();
 
@@ -1644,10 +1672,10 @@ class CoEnterVentPatch
                 if (nextvent == null) continue;
                 // Skip current vent or ventid 5 in Dleks to prevent stuck
                 if (nextvent.Id == id || (GameStates.DleksIsActive && id is 5 && nextvent.Id is 6)) continue;
-                CustomRoleManager.BlockedVentsList[__instance.myPlayer.PlayerId].Add(nextvent.Id);
+                CustomRoleManager.BlockedVentsList[instance.myPlayer.PlayerId].Add(nextvent.Id);
                 playerRoleClass.LastBlockedMoveInVentVents.Add(nextvent.Id);
             }
-            __instance.myPlayer.RpcSetVentInteraction();
+            instance.myPlayer.RpcSetVentInteraction();
         }
 
         _ = new LateTask(() => VentSystemDeterioratePatch.ForceUpadate = false, 1f, "Set Force Upadate As False", shoudLog: false);
@@ -1678,6 +1706,25 @@ class EnterVentPatch
         }
     }
 }
+
+[HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.RpcEnterVent))]
+class RpcEnterVentPatch
+{
+    public static bool Prefix(PlayerPhysics __instance, [HarmonyArgument(0)] int id)
+    {
+        // This is identical to what the vanilla game did previously, but something seems to have changed that makes CoEnterVent not happen for host, so reverted to this
+        if (AmongUsClient.Instance.AmClient)
+        {
+            __instance.StopAllCoroutines();
+            __instance.StartCoroutine(__instance.CoEnterVent(id));
+        }
+        RpcEnterVentMessage rpcEnterVentMessage = new RpcEnterVentMessage(__instance.NetId, id);
+        AmongUsClient.Instance.LateBroadcastReliableMessage(rpcEnterVentMessage.CastFast<IGameDataMessage>());
+
+        return false;
+    }
+}
+
 [HarmonyPatch(typeof(PlayerPhysics._CoExitVent_d__48), nameof(PlayerPhysics._CoExitVent_d__48.MoveNext))]
 class CoExitVentPatch
 {
@@ -2143,6 +2190,8 @@ class PlayerControlLocalSetRolePatch
                 RoleTypes.Noisemaker => CustomRoles.NoisemakerTOHFE,
                 RoleTypes.Phantom => CustomRoles.PhantomTOHFE,
                 RoleTypes.Tracker => CustomRoles.TrackerTOHFE,
+                RoleTypes.Detective => CustomRoles.DetectiveTOHFE,
+                RoleTypes.Viper => CustomRoles.ViperTOHFE,
                 _ => CustomRoles.NotAssigned,
             };
             if (modRole != CustomRoles.NotAssigned)

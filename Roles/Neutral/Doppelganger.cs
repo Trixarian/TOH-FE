@@ -17,10 +17,13 @@ internal class Doppelganger : RoleBase
     public override Custom_RoleType ThisRoleType => Custom_RoleType.NeutralKilling;
     //==================================================================\\
 
+    private static readonly Dictionary<byte, byte> targets = [];
+
     private static OptionItem KillCooldown;
     private static OptionItem CanVent;
     private static OptionItem HasImpostorVision;
     private static OptionItem MaxSteals;
+    private static OptionItem PreventTargetSeeRoles;
 
     public override void SetupCustomOption()
     {
@@ -32,10 +35,13 @@ internal class Doppelganger : RoleBase
             .SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
         HasImpostorVision = BooleanOptionItem.Create(Id + 13, GeneralOption.ImpostorVision, true, TabGroup.NeutralRoles, false)
             .SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
+        PreventTargetSeeRoles = BooleanOptionItem.Create(Id + 14, "DoppelCurrentVictimCanSeeRolesAsDead", false, TabGroup.NeutralRoles, false)
+            .SetParent(CustomRoleSpawnChances[CustomRoles.Doppelganger]);
     }
     public override void Add(byte playerId)
     {
         playerId.SetAbilityUseLimit(MaxSteals.GetInt());
+        targets[playerId] = byte.MaxValue;
     }
     public override void SetKillCooldown(byte id) => Main.AllPlayerKillCooldown[id] = KillCooldown.GetFloat();
     public override bool CanUseKillButton(PlayerControl pc) => true;
@@ -54,6 +60,8 @@ internal class Doppelganger : RoleBase
         {
             return true;
         }
+
+        targets[killer.PlayerId] = target.PlayerId;
 
         killer.RpcRemoveAbilityUse();
 
@@ -83,5 +91,13 @@ internal class Doppelganger : RoleBase
         killer.ResetKillCooldown();
         killer.SetKillCooldown();
         return true;
+    }
+
+    public static bool PreventKnowRole(PlayerControl seer)
+    {
+        if (seer.IsAlive()) return false;
+        if (PreventTargetSeeRoles.GetBool() && targets.Any(x => x.Value == seer.PlayerId))
+            return true;
+        return false;
     }
 }

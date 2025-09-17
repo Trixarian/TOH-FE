@@ -1027,7 +1027,7 @@ static class ExtendedPlayerControl
     }
 
     public static float GetKillDistances(bool ovverideValue = false, int newValue = 2)
-        => NormalGameOptionsV09.KillDistances[Mathf.Clamp(ovverideValue ? newValue : Main.NormalOptions.KillDistance, 0, 2)];
+        => NormalGameOptionsV10.KillDistances[Mathf.Clamp(ovverideValue ? newValue : Main.NormalOptions.KillDistance, 0, 2)];
 
     public static void MarkDirtySettings(this PlayerControl player)
     {
@@ -1265,6 +1265,8 @@ static class ExtendedPlayerControl
         {
             Main.AllPlayerKillCooldown[player.PlayerId] = 0.3f;
         }
+        
+        Logger.Info($"Set {player.name} cooldown to {Main.AllPlayerKillCooldown[player.PlayerId]}", "ResetKillCooldown");
     }
     public static bool IsNonCrewSheriff(this PlayerControl sheriff)
     {
@@ -1391,7 +1393,7 @@ static class ExtendedPlayerControl
         else if (Options.SeeEjectedRolesInMeeting.GetBool() && Main.PlayerStates[target.PlayerId].deathReason == PlayerState.DeathReason.Vote) return true;
         else if (Altruist.HasEnabled && seer.IsMurderedThisRound()) return false;
         else if (seer.GetCustomRole() == target.GetCustomRole() && seer.GetCustomRole().IsNK()) return true;
-        else if (Options.LoverKnowRoles.GetBool() && seer.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) return true;
+        else if (Lovers.LoverKnowRoles.GetBool() && seer.IsLoverWith(target)) return true;
         else if (Options.ImpsCanSeeEachOthersRoles.GetBool() && seer.CheckImpCanSeeAllies(CheckAsSeer: true) && target.CheckImpCanSeeAllies(CheckAsTarget: true)) return true;
         else if (Madmate.MadmateKnowWhosImp.GetBool() && seer.Is(CustomRoles.Madmate) && target.CheckImpCanSeeAllies(CheckAsTarget: true)) return true;
         else if (Madmate.ImpKnowWhosMadmate.GetBool() && target.Is(CustomRoles.Madmate) && seer.CheckImpCanSeeAllies(CheckAsSeer: true)) return true;
@@ -1420,6 +1422,7 @@ static class ExtendedPlayerControl
         {
             if (Nemesis.PreventKnowRole(seer)) return false;
             if (Retributionist.PreventKnowRole(seer)) return false;
+            if (Doppelganger.PreventKnowRole(seer)) return false;
 
             if (!Options.GhostCanSeeOtherRoles.GetBool())
                 return false;
@@ -1460,6 +1463,7 @@ static class ExtendedPlayerControl
         {
             if (Nemesis.PreventKnowRole(seer)) return false;
             if (Retributionist.PreventKnowRole(seer)) return false;
+            if (Doppelganger.PreventKnowRole(seer)) return false;
 
             if (!Options.GhostCanSeeOtherRoles.GetBool())
                 return false;
@@ -1611,6 +1615,11 @@ static class ExtendedPlayerControl
     public static void SetDeathReason(this byte targetId, PlayerState.DeathReason reason)
     {
         Main.PlayerStates[targetId].deathReason = reason;
+    }
+    public static PlayerState.DeathReason GetDeathReason(this PlayerControl target) => target.PlayerId.GetDeathReason();
+    public static PlayerState.DeathReason GetDeathReason(this byte targetId)
+    {
+        return Main.PlayerStates[targetId].deathReason;
     }
 
     public static bool Is(this PlayerControl target, CustomRoles role) =>

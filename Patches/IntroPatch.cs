@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TOHFE.Modules;
 using TOHFE.Patches;
+using TOHFE.Roles.AddOns.Common;
 using TOHFE.Roles.AddOns.Impostor;
 using TOHFE.Roles.Core;
 using TOHFE.Roles.Core.AssignManager;
@@ -58,7 +59,7 @@ class CoShowIntroPatch
             {
                 Logger.Warn($"Game ended? {GameStates.IsEnded}", "ShipStatus.Begin");
             }
-        }, 4f, "Assing Task For All");
+        }, 4f, "Assigning Task For All");
     }
 }
 [HarmonyPatch(typeof(IntroCutscene), nameof(IntroCutscene.CoBegin))]
@@ -335,12 +336,13 @@ class BeginCrewmatePatch
         {
             teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
             teamToDisplay.Add(PlayerControl.LocalPlayer);
+            teamToDisplay.Add(Main.AllAlivePlayerControls.FirstOrDefault(p => Lovers.AreLovers(p, PlayerControl.LocalPlayer)));
 
-            foreach (var pc in Main.AllAlivePlayerControls)
-            {
-                if (pc.Is(CustomRoles.Lovers) && pc != PlayerControl.LocalPlayer)
-                    teamToDisplay.Add(pc);
-            }
+            // foreach (var pc in Main.AllAlivePlayerControls)
+            // {
+            //     if (pc.Is(CustomRoles.Lovers) && pc != PlayerControl.LocalPlayer)
+            //         teamToDisplay.Add(pc);
+            // }
 
             __instance.overlayHandle.color = new Color32(255, 154, 206, byte.MaxValue);
             return true;
@@ -513,6 +515,12 @@ class BeginCrewmatePatch
             case CustomRoles.TrackerTOHFE:
                 PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Tracker);
                 break;
+            case CustomRoles.DetectiveTOHFE:
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Detective);
+                break;
+            case CustomRoles.ViperTOHFE:
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Viper);
+                break;
             case CustomRoles.Celebrity:
             case CustomRoles.Sacrifist:
             case CustomRoles.Poisoner:
@@ -605,26 +613,27 @@ class BeginCrewmatePatch
                 break;
             case CustomRoles.Jinx:
             case CustomRoles.Romantic:
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == RoleTypes.GuardianAngel)?.UseSound;
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == RoleTypes.GuardianAngel)?.UseSound;
                 break;
             case CustomRoles.Illusionist:
             case CustomRoles.MoonDancer:
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == RoleTypes.Phantom)?.UseSound;
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == RoleTypes.Phantom)?.UseSound;
                 break;
             case CustomRoles.Telecommunication:
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == RoleTypes.Tracker)?.UseSound;
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == RoleTypes.Tracker)?.UseSound;
                 break;
             case CustomRoles.Morphling:
             case CustomRoles.Twister:
-                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == RoleTypes.Shapeshifter)?.UseSound;
+                PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == RoleTypes.Shapeshifter)?.UseSound;
                 break;
+
         }
 
         if (PlayerControl.LocalPlayer.Is(CustomRoles.Lovers))
         {
             __instance.TeamTitle.text = GetString("TeamLovers");
             __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 154, 206, byte.MaxValue);
-            PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == RoleTypes.GuardianAngel)?.UseSound;
+            PlayerControl.LocalPlayer.Data.Role.IntroSound = RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == RoleTypes.GuardianAngel)?.UseSound;
             __instance.ImpostorText.gameObject.SetActive(true);
             __instance.ImpostorText.text = GetString("SubText.Lovers");
         }
@@ -691,7 +700,7 @@ class BeginCrewmatePatch
     }
     public static AudioClip GetIntroSound(RoleTypes roleType)
     {
-        return RoleManager.Instance.AllRoles.FirstOrDefault((role) => role.Role == roleType)?.IntroSound;
+        return RoleManager.Instance.AllRoles.ToArray().FirstOrDefault((role) => role.Role == roleType)?.IntroSound;
     }
     private static async void StartFadeIntro(IntroCutscene __instance, Color start, Color end)
     {

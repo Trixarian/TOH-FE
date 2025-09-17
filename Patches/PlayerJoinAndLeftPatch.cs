@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using TOHFE.Modules;
 using TOHFE.Modules.Rpc;
 using TOHFE.Patches;
+using TOHFE.Roles.AddOns.Common;
 using TOHFE.Roles.Core.AssignManager;
 using TOHFE.Roles.Crewmate;
 using static TOHFE.Translator;
@@ -98,7 +99,7 @@ class OnGameJoinedPatch
                     if (Options.CurrentGameMode != CustomGameMode.HidenSeekTOHFE)
                     {
                         // Select HideNSeekTOHFE
-                        Options.GameMode.SetValue(2);
+                        Options.GameMode.SetValue(3);
                     }
                     break;
 
@@ -382,12 +383,13 @@ class OnPlayerLeftPatch
             {
                 if (data.Character.Is(CustomRoles.Lovers) && !data.Character.Data.IsDead)
                 {
-                    foreach (var lovers in Main.LoversPlayers.ToArray())
-                    {
-                        Main.isLoversDead = true;
-                        Main.LoversPlayers.Remove(lovers);
-                        Main.PlayerStates[lovers.PlayerId].RemoveSubRole(CustomRoles.Lovers);
-                    }
+                    Lovers.OnPartnerLeft(data.Character.PlayerId);
+                    // foreach (var lovers in Main.LoversPlayers.ToArray())
+                    // {
+                    //     Main.isLoversDead = true;
+                    //     Main.LoversPlayers.Remove(lovers);
+                    //     Main.PlayerStates[lovers.PlayerId].RemoveSubRole(CustomRoles.Lovers);
+                    // }
                 }
 
                 Spiritualist.RemoveTarget(data.Character.PlayerId);
@@ -501,7 +503,7 @@ class OnPlayerLeftPatch
                     break;
             }
 
-            Logger.Info($"{data?.PlayerName} - (ClientID:{data?.Id} / FriendCode:{data?.FriendCode} / HashPuid:{data?.GetHashedPuid()} / Platform:{data?.PlatformData.Platform}) Disconnect (Reason:{reason}´╝îPing:{AmongUsClient.Instance.Ping})", "Session OnPlayerLeftPatch");
+            Logger.Info($"{data?.PlayerName} - (ClientID:{data?.Id} / FriendCode:{data?.FriendCode} / HashPuid:{data?.GetHashedPuid()} / Platform:{data?.PlatformData.Platform}) Disconnect (Reason:{reason} / Ping:{AmongUsClient.Instance.Ping})", "Session OnPlayerLeftPatch");
 
             // End the game when a player exits game during assigning roles (AntiBlackOut Protect)
             if (Main.AssignRolesIsStarted)

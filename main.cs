@@ -53,17 +53,17 @@ public class Main : BasePlugin
     public static ConfigEntry<string> DebugKeyInput { get; private set; }
 
     public const string PluginGuid = "com.trixarian.tohfe";
-    public const string PluginVersion = "2025.0630.230.00600"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.3.5";
+    public const string PluginVersion = "2025.0916.240.00300"; // YEAR.MMDD.VERSION.CANARYDEV
+    public const string PluginDisplayVersion = "2.4.0";
     public static readonly List<(int year, int month, int day, int revision)> SupportedVersionAU =
-        [
-            (2025, 4, 15, 0) // 2025.3.25 & 16.0.0
-        ];
+    [
+        (2025, 9, 9, 0) // 2025.9.9 & 17.0.0
+    ];
 
     /******************* Change one of the three variables to true before making a release. *******************/
     public static readonly bool devRelease = false; // Latest: V2.3.0 Alpha 9
-    public static readonly bool canaryRelease = false; // Latest: V2.2.0 Beta 4
-    public static readonly bool fullRelease = true; // Latest: V2.3.5
+    public static readonly bool canaryRelease = false; // Latest: V2.4.0 Beta 3
+    public static readonly bool fullRelease = true; // Latest: V2.4.0
 
     public static bool hasAccess = true;
 
@@ -91,8 +91,8 @@ public class Main : BasePlugin
     public static string credentialsText;
     public Coroutines coroutines;
     public Dispatcher dispatcher;
-    public static NormalGameOptionsV09 NormalOptions => GameOptionsManager.Instance.currentNormalGameOptions;
-    public static HideNSeekGameOptionsV09 HideNSeekOptions => GameOptionsManager.Instance.currentHideNSeekGameOptions;
+    public static NormalGameOptionsV10 NormalOptions => GameOptionsManager.Instance.currentNormalGameOptions;
+    public static HideNSeekGameOptionsV10 HideNSeekOptions => GameOptionsManager.Instance.currentHideNSeekGameOptions;
     //Client Options
     public static ConfigEntry<string> HideName { get; private set; }
     public static ConfigEntry<string> HideColor { get; private set; }
@@ -186,8 +186,8 @@ public class Main : BasePlugin
 
     public static bool GameIsLoaded { get; set; } = false;
 
-    public static bool isLoversDead = true;
-    public static readonly HashSet<PlayerControl> LoversPlayers = [];
+    // public static bool isLoversDead = true;
+    // public static readonly HashSet<PlayerControl> LoversPlayers = [];
 
     public static bool DoBlockNameChange = false;
     public static int updateTime;
@@ -660,9 +660,9 @@ public class Main : BasePlugin
         ClassInjector.RegisterTypeInIl2Cpp<ShapeShifterPagingBehaviour>();
         ClassInjector.RegisterTypeInIl2Cpp<VitalsPagingBehaviour>();
 
-        NormalGameOptionsV09.RecommendedImpostors = NormalGameOptionsV09.MaxImpostors = Enumerable.Repeat(128, 128).ToArray();
-        NormalGameOptionsV09.MinPlayers = Enumerable.Repeat(4, 128).ToArray();
-        HideNSeekGameOptionsV09.MinPlayers = Enumerable.Repeat(4, 128).ToArray();
+        NormalGameOptionsV10.RecommendedImpostors = NormalGameOptionsV10.MaxImpostors = Enumerable.Repeat(128, 128).ToArray();
+        NormalGameOptionsV10.MinPlayers = Enumerable.Repeat(4, 128).ToArray();
+        HideNSeekGameOptionsV10.MinPlayers = Enumerable.Repeat(4, 128).ToArray();
         DisconnectPopup.ErrorMessages[DisconnectReasons.Hacking] = StringNames.ErrorHacking;
 
         Harmony.PatchAll();
@@ -671,7 +671,7 @@ public class Main : BasePlugin
         if (DebugModeManager.AmDebugger) ConsoleManager.CreateConsole();
 
         // InitializeFileHash();
-        FileHash = "niko_is_testing_shit_for_2025_04_15";
+        FileHash = "drafting_2025_09_09";
         TOHFE.Logger.Msg("========= TOHFE loaded! =========", "Plugin Load");
     }
 }
@@ -685,11 +685,13 @@ public enum CustomRoles
     Noisemaker,
     Scientist,
     Tracker,
+    Detective,
 
     // Impostor(Vanilla)
     Impostor,
     Phantom,
     Shapeshifter,
+    Viper,
 
     // Crewmate Vanilla Remakes
     CrewmateTOHFE,
@@ -698,11 +700,13 @@ public enum CustomRoles
     NoisemakerTOHFE,
     ScientistTOHFE,
     TrackerTOHFE,
+    DetectiveTOHFE,
 
     // Impostor Vanilla Remakes
     ImpostorTOHFE,
     PhantomTOHFE,
     ShapeshifterTOHFE,
+    ViperTOHFE,
 
     // Impostor Ghost
     Bloodmoon,
@@ -800,6 +804,7 @@ public enum CustomRoles
     Benefactor,
     Bodyguard,
     Captain,
+    Catalyst,
     Celebrity,
     Chameleon,
     ChiefOfPolice,
@@ -809,7 +814,7 @@ public enum CustomRoles
     Crusader,
     Deceiver,
     Deputy,
-    Detective,
+    Forensic,
     Dictator,
     Doctor,
     Enigma,
@@ -892,10 +897,12 @@ public enum CustomRoles
     Imitator,
     Infectious,
     Innocent,
+    Inquisitor,
     Jackal,
     Jester,
     Juggernaut,
     Lawyer,
+    Lich,
     Maverick,
     Opportunist,
     Pelican,
@@ -1014,6 +1021,7 @@ public enum CustomRoles
     Lucky,
     Madmate,
     Mare,
+    Rat,
     Rebirth,
     Mimic,
     Mundane,
@@ -1079,6 +1087,7 @@ public enum CustomWinner
     God = CustomRoles.God,
     Vector = CustomRoles.Vector,
     Innocent = CustomRoles.Innocent,
+    Inquisitor = CustomRoles.Inquisitor,
     Pelican = CustomRoles.Pelican,
     Youtuber = CustomRoles.Youtuber,
     Egoist = CustomRoles.Egoist,

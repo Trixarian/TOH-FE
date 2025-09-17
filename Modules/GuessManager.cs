@@ -555,9 +555,9 @@ public static class GuessManager
             result += mc[i];//匹配结果是完整的数字，此处可以不做拼接的
         }
 
-        if (int.TryParse(result, out int num))
+        if (byte.TryParse(result, out byte num))
         {
-            id = Convert.ToByte(num);
+            id = num;
         }
         else
         {
@@ -661,6 +661,8 @@ public static class GuessManager
                 if (PlayerControl.LocalPlayer.IsAlive() && PlayerControl.LocalPlayer.GetCustomRole().IsCoven() && Options.CovenCanGuess.GetBool())
                     CreateGuesserButton(__instance);
                 else if (PlayerControl.LocalPlayer.GetCustomRole() is CustomRoles.Doomsayer && !Options.PassiveNeutralsCanGuess.GetBool() && !Doomsayer.CheckCantGuess)
+                    CreateGuesserButton(__instance);
+                else if (PlayerControl.LocalPlayer.IsAlive() && PlayerControl.LocalPlayer.Is(CustomRoles.Guesser))
                     CreateGuesserButton(__instance);
             }
             else
@@ -943,6 +945,15 @@ public static class GuessManager
                 if (!listOfRoles.Contains(CustomRoles.EngineerTOHFE))
                     listOfRoles.Add(CustomRoles.EngineerTOHFE);
 
+                if (!listOfRoles.Contains(CustomRoles.TrackerTOHFE))
+                    listOfRoles.Add(CustomRoles.TrackerTOHFE);
+
+                if (!listOfRoles.Contains(CustomRoles.PhantomTOHFE))
+                    listOfRoles.Add(CustomRoles.PhantomTOHFE);
+
+                if (!listOfRoles.Contains(CustomRoles.DetectiveTOHFE))
+                    listOfRoles.Add(CustomRoles.DetectiveTOHFE);
+
                 if (!listOfRoles.Contains(CustomRoles.Amnesiac))
                     listOfRoles.Add(CustomRoles.Amnesiac);
 
@@ -983,6 +994,12 @@ public static class GuessManager
                 }
 
                 if (CustomRoles.SoulCollector.IsEnable())
+                {
+                    if (!listOfRoles.Contains(CustomRoles.Death))
+                        listOfRoles.Add(CustomRoles.Death);
+                }
+
+                if (CustomRoles.Lich.IsEnable())
                 {
                     if (!listOfRoles.Contains(CustomRoles.Death))
                         listOfRoles.Add(CustomRoles.Death);

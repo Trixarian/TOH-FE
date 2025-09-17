@@ -1,6 +1,7 @@
 using TOHFE.Modules;
 using TOHFE.Roles.Core;
 using TOHFE.Roles.Coven;
+using TOHFE.Roles.Neutral;
 using static TOHFE.Options;
 using static TOHFE.Translator;
 using static TOHFE.Utils;
@@ -81,7 +82,8 @@ internal class Oracle : RoleBase
                 string text = "Crewmate";
                 if (ChangeRecruitTeam.GetBool())
                 {
-                    if (target.Is(CustomRoles.Admired) || target.Is(CustomRoles.Narc)) text = "Crewmate";
+                    if (Lich.IsCursed(target)) text = "Neutral";
+                    else if (target.Is(CustomRoles.Admired) || target.Is(CustomRoles.Narc)) text = "Crewmate";
                     else if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
                     else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) text = "Coven";
                     else if (target.GetCustomRole().IsImpostorTeamV2() || target.GetCustomSubRoles().Any(role => role.IsImpostorTeamV2())) text = "Impostor";
@@ -91,7 +93,8 @@ internal class Oracle : RoleBase
                 }
                 else
                 {
-                    if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
+                    if (Lich.IsCursed(target)) text = "Neutral";
+                    else if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
                     else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) text = "Coven";
                     else if (target.Is(CustomRoles.Narc)) text = "Crewmate";
                     else if (target.Is(Custom_Team.Impostor) && !target.Is(CustomRoles.Trickster)) text = "Impostor";

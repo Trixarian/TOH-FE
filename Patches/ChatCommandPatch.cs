@@ -1694,14 +1694,9 @@ internal class ChatCommands
                     }
                     else
                     {
-                        CustomRoles draftRole = ParseRole(args[1]);
                         CustomRoles draftedRole;
                         DraftAssign.DraftCmdResult cmdResult;
-                        if (draftRole != CustomRoles.NotAssigned)
-                        {
-                            (cmdResult, draftedRole) = PlayerControl.LocalPlayer.DraftRole(draftRole);
-                        }
-                        else if (int.TryParse(args[1], out int index))
+                        if (int.TryParse(args[1], out int index))
                         {
                             (cmdResult, draftedRole) = PlayerControl.LocalPlayer.DraftRole(index);
                         }
@@ -3724,18 +3719,14 @@ internal class ChatCommands
                     Options.devEnableDraft = true;
                     Options.DraftHeader.SetHidden(false);
                     Options.DraftMode.SetHidden(false);
-                    Utils.SendMessage($"Developer {player.GetRealName()} has enabled draft for you. (No leaks yet please)", PlayerControl.LocalPlayer.PlayerId);
+                    foreach (var pc in Main.AllPlayerControls)
+                        Utils.SendMessage($"Developer {player.GetRealName()} has enabled draft for you. (No leaks yet please)", pc.PlayerId);
                 }
                 else
                 {
-                    CustomRoles draftRole = ParseRole(args[1]);
                     CustomRoles draftedRole;
                     DraftAssign.DraftCmdResult cmdResult;
-                    if (draftRole != CustomRoles.NotAssigned)
-                    {
-                        (cmdResult, draftedRole) = player.DraftRole(draftRole);
-                    }
-                    else if (int.TryParse(args[1], out int index))
+                    if (int.TryParse(args[1], out int index))
                     {
                         (cmdResult, draftedRole) = player.DraftRole(index);
                     }
@@ -3758,6 +3749,7 @@ internal class ChatCommands
                     else
                     {
                         Utils.SendMessage(string.Format(GetString("DraftSelection"), draftedRole.ToColoredString()), player.PlayerId);
+                        SendRolesInfo(draftedRole.ToString(), player.PlayerId, isDev: player.FriendCode.GetDevUser().DeBug);
                     }
                 }
                 break;

@@ -54,7 +54,7 @@ public class Main : BasePlugin
 
     public const string PluginGuid = "com.trixarian.tohfe";
     public const string PluginVersion = "2025.0916.240.00300"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.4.0";
+    public const string PluginDisplayVersion = "2.4.1";
     public static readonly List<(int year, int month, int day, int revision)> SupportedVersionAU =
     [
         (2025, 9, 9, 0) // 2025.9.9 & 17.0.0

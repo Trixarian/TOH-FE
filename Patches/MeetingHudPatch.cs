@@ -1059,16 +1059,16 @@ class MeetingHudStartPatch
             Rat.GetMessage();
 
         // Add Mimic msg
-            if (MimicMsg != "")
-            {
-                MimicMsg = GetString("MimicDeadMsg") + "\n" + MimicMsg;
+        if (MimicMsg != "")
+        {
+            MimicMsg = GetString("MimicDeadMsg") + "\n" + MimicMsg;
 
-                var isImpostorTeamList = Main.AllPlayerControls.Where(x => x.GetCustomRole().IsImpostorTeam()).ToArray();
-                foreach (var imp in isImpostorTeamList)
-                {
-                    AddMsg(MimicMsg, imp.PlayerId, ColorString(GetRoleColor(CustomRoles.Mimic), GetString("Mimic").ToUpper()));
-                }
+            var isImpostorTeamList = Main.AllPlayerControls.Where(x => x.GetCustomRole().IsImpostorTeam()).ToArray();
+            foreach (var imp in isImpostorTeamList)
+            {
+                AddMsg(MimicMsg, imp.PlayerId, ColorString(GetRoleColor(CustomRoles.Mimic), GetString("Mimic").ToUpper()));
             }
+        }
 
         msgToSend.Do(x => Logger.Info($"To:{x.Item2} {x.Item3} => {x.Item1}", "Skill Notice OnMeeting Start"));
 
@@ -1295,7 +1295,7 @@ class MeetingHudStartPatch
             var seerRoleClass = seer.GetRoleClass();
 
             // if based role is Shapeshifter/Phantom and is Desync Shapeshifter/Phantom
-            if (seerRoleClass?.ThisRoleBase.GetRoleTypes() is RoleTypes.Shapeshifter or RoleTypes.Phantom && seer.HasDesyncRole())
+            if (seerRoleClass?.ThisRoleBase.GetRoleTypes() is RoleTypes.Shapeshifter or RoleTypes.Phantom or RoleTypes.Impostor && seer.HasDesyncRole())
             {
                 // When target is impostor, set name color as white
                 target.cosmetics.SetNameColor(Color.white);
@@ -1333,7 +1333,7 @@ class MeetingHudStartPatch
             }
 
             //bool isLover = false;
-            foreach (var TargetSubRole in target.GetCustomSubRoles().ToArray())
+            foreach (var TargetSubRole in target.GetCustomSubRoles())
             {
                 switch (TargetSubRole)
                 {
@@ -1359,7 +1359,7 @@ class MeetingHudStartPatch
             pva.TargetPlayerId = target.PlayerId;
         }
 
-        __instance.SortButtons();
+        // __instance.SortButtons();
     }
 }
 [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]

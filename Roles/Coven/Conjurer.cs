@@ -1,4 +1,5 @@
 using AmongUs.GameOptions;
+using TOHFE.Modules;
 using UnityEngine;
 using static TOHFE.Options;
 using static TOHFE.Translator;
@@ -114,6 +115,7 @@ internal class Conjurer : CovenManager
                 shapeshifter.Notify(GetString("ConjurerMeteor"));
                 state[shapeshifterId] = ConjState.NormalMark;
                 ConjPosition[shapeshifterId].Clear();
+                CustomSoundsManager.RPCPlayCustomSoundAll("Boom");
                 break;
             case ConjState.NecroMark:
                 if (target == null)
@@ -150,6 +152,7 @@ internal class Conjurer : CovenManager
                 shapeshifter.Notify(GetString("ConjurerMeteor"));
                 state[shapeshifterId] = ConjState.NecroMark;
                 NecroBombHolder = byte.MaxValue;
+                CustomSoundsManager.RPCPlayCustomSoundAll("Boom");
                 break;
         }
         return false;

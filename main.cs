@@ -53,7 +53,7 @@ public class Main : BasePlugin
     public static ConfigEntry<string> DebugKeyInput { get; private set; }
 
     public const string PluginGuid = "com.trixarian.tohfe";
-    public const string PluginVersion = "2025.0916.240.00300"; // YEAR.MMDD.VERSION.CANARYDEV
+    public const string PluginVersion = "2025.0928.240.00400"; // YEAR.MMDD.VERSION.CANARYDEV
     public const string PluginDisplayVersion = "2.4.1";
     public static readonly List<(int year, int month, int day, int revision)> SupportedVersionAU =
     [
@@ -63,7 +63,7 @@ public class Main : BasePlugin
     /******************* Change one of the three variables to true before making a release. *******************/
     public static readonly bool devRelease = false; // Latest: V2.3.0 Alpha 9
     public static readonly bool canaryRelease = false; // Latest: V2.4.0 Beta 3
-    public static readonly bool fullRelease = true; // Latest: V2.4.0
+    public static readonly bool fullRelease = true; // Latest: V2.4.1
 
     public static bool hasAccess = true;
 

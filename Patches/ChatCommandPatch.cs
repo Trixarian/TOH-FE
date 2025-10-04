@@ -131,7 +131,26 @@ internal class ChatCommands
                     }
                 }
                 break;
+            case "/save":
+            case "/savepreset":
+                canceled = true;
+                string saveFileName = "template";
+                if (args.Length >= 2)
+                    saveFileName = string.Join(" ", args[1..]);
 
+                string saveFile = OptionCopier.Save(fileName: saveFileName);
+                Utils.SendMessage(string.Format(GetString("PresetSaved"), saveFile), PlayerControl.LocalPlayer.PlayerId);
+                break;
+            case "/docs":
+                if (!PlayerControl.LocalPlayer.FriendCode.GetDevUser().IsDev) break;
+                canceled = true;
+                int roleId = 500;
+                if (args.Length >= 2)
+                    roleId = int.Parse(args[1]);
+
+                if (roleId != 500)
+                    ((CustomRoles)roleId).GenerateDocs();
+                break;
             default:
                 Main.isChatCommand = false;
                 break;
@@ -1721,6 +1740,16 @@ internal class ChatCommands
                             Utils.SendMessage(string.Format(GetString("DraftSelection"), draftedRole.ToColoredString()), PlayerControl.LocalPlayer.PlayerId);
                         }
                     }
+                    break;
+                case "/load":
+                case "/loadpreset":
+                    canceled = true;
+                    string loadFileName = "template";
+                    if (args.Length >= 2)
+                        loadFileName = string.Join(" ", args[1..]);
+
+                    string loadFile = OptionCopier.Load(fileName: loadFileName);
+                    Utils.SendMessage(string.Format(GetString("PresetLoaded"), loadFile), PlayerControl.LocalPlayer.PlayerId);
                     break;
                 case "/spam":
                     canceled = true;
@@ -3684,6 +3713,11 @@ internal class ChatCommands
                         }
                     }
                 }
+                else if (args[1] == "desc" || args[1] == "description")
+                {
+                    if (args.Length > 2) args[1] = args[2];
+                    goto case "/dd";
+                }
                 else if (args[1] == "add")
                 {
                     if (!tagCanStartDraft && !Utils.IsPlayerModerator(player.FriendCode))
@@ -3752,6 +3786,9 @@ internal class ChatCommands
                         SendRolesInfo(draftedRole.ToString(), player.PlayerId, isDev: player.FriendCode.GetDevUser().DeBug);
                     }
                 }
+                break;
+            case "/dd":
+            case "/draftdescription":
                 break;
             case "/exe":
             case "/уничтожить":

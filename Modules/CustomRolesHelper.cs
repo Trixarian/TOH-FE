@@ -720,7 +720,6 @@ public static class CustomRolesHelper
                 if (pc.Is(CustomRoles.SuperStar)
                     || Doctor.VisibleToEveryone(pc)
                     || (pc.Is(CustomRoles.Bait) && Bait.BaitNotification.GetBool())
-                    || pc.Is(CustomRoles.LastImpostor)
                     || pc.Is(CustomRoles.NiceMini)
                     || pc.Is(CustomRoles.Mare)
                     || pc.Is(CustomRoles.Solsticer)
@@ -734,7 +733,6 @@ public static class CustomRolesHelper
                 if (pc.Is(CustomRoles.SuperStar)
                     || Doctor.VisibleToEveryone(pc)
                     || (pc.Is(CustomRoles.Bait) && Bait.BaitNotification.GetBool())
-                    || pc.Is(CustomRoles.LastImpostor)
                     || pc.Is(CustomRoles.NiceMini)
                     || pc.Is(CustomRoles.Mare)
                     || pc.Is(CustomRoles.Solsticer)
@@ -1420,9 +1418,9 @@ public static class CustomRolesHelper
     /// </summary>
     public static bool IsImpostorTeam(this CustomRoles role) => role.IsImpostor() || role == CustomRoles.Madmate;
     /// <summary>
-    /// Role Is Not Impostor nor Madmate Nor Neutral nor Coven.
+    /// Role Is Not Impostor nor Madmate Nor Neutral nor Coven nor an Add-on
     /// </summary>
-    public static bool IsCrewmate(this CustomRoles role) => !role.IsImpostor() && !role.IsNeutral() && !role.IsMadmate() && !role.IsCoven();
+    public static bool IsCrewmate(this CustomRoles role) => !role.IsImpostor() && !role.IsNeutral() && !role.IsMadmate() && !role.IsCoven() && !role.IsAdditionRole();
     /// <summary>
     /// Role is Rascal or Madmate and not trickster.
     /// </summary>

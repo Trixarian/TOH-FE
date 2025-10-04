@@ -181,12 +181,15 @@ class ExileControllerWrapUpPatch
 
                     Logger.Info($"{player?.GetNameWithRole().RemoveHtmlTags()} died with {x.Value}", "AfterMeetingDeath");
 
+                    if (x.Value == PlayerState.DeathReason.Suicide)
+                        player?.SetRealKiller(player, true);
+
                     state.deathReason = x.Value;
                     state.SetDead();
                     player?.RpcExileV2();
 
-                    if (x.Value == PlayerState.DeathReason.Suicide)
-                        player?.SetRealKiller(player, true);
+                    // Just to be sure
+                    _ = new LateTask(() => player?.RpcExileV2(), 0.5f, "Extra Exile to be Sure");
 
                     MurderPlayerPatch.AfterPlayerDeathTasks(player, player, true);
                 });
@@ -217,7 +220,7 @@ class ExileControllerWrapUpPatch
                                 player.ResetKillCooldown();
                                 if (Main.AllPlayerKillCooldown.TryGetValue(player.PlayerId, out var killTimer) && (killTimer - 2f) > 0f)
                                 {
-                                    player.SetKillCooldown(Options.ChangeFirstKillCooldown.GetBool() ? Options.FixKillCooldownValue.GetFloat() - 2f : killTimer - 2f);
+                                    player.SetKillCooldown(killTimer - 2f);
                                 }
                             }
                         }

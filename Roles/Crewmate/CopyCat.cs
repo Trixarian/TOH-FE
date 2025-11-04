@@ -24,7 +24,7 @@ internal class CopyCat : RoleBase
     private static OptionItem CopyOnlyEnabledRoles;
 
     private static float CurrentKillCooldown = new();
-    private static readonly Dictionary<byte, List<CustomRoles>> OldAddons = [];
+    public static readonly Dictionary<byte, List<CustomRoles>> OldAddons = [];
 
     public override void SetupCustomOption()
     {
@@ -103,7 +103,6 @@ internal class CopyCat : RoleBase
             CustomRoles.Doomsayer or // CopyCat cannot guessed roles because he can be know others roles players
             CustomRoles.EvilGuesser or
             CustomRoles.NiceGuesser or
-            // CustomRoles.Baker or
             CustomRoles.Famine;
     }
 
@@ -129,10 +128,10 @@ internal class CopyCat : RoleBase
                 CustomRoles.Godfather => CustomRoles.ChiefOfPolice,
                 CustomRoles.Twister => CustomRoles.TimeMaster,
                 CustomRoles.Disperser => CustomRoles.Transporter,
-                CustomRoles.Eraser => CustomRoles.Cleanser,
+                CustomRoles.Eraser or CustomRoles.Bandit => CustomRoles.Cleanser,
                 CustomRoles.Visionary => CustomRoles.Oracle,
                 CustomRoles.Workaholic => CustomRoles.Snitch,
-                CustomRoles.Sunnyboy => CustomRoles.Doctor,
+                CustomRoles.Sunnyboy => new[] { CustomRoles.Doctor, CustomRoles.ScientistTOHFE }.RandomElement(),
                 CustomRoles.Councillor => CustomRoles.Judge,
                 CustomRoles.Taskinator => CustomRoles.Benefactor,
                 CustomRoles.EvilTracker => CustomRoles.TrackerTOHFE,
@@ -142,7 +141,7 @@ internal class CopyCat : RoleBase
                 CustomRoles.Swooper or CustomRoles.Wraith => CustomRoles.Chameleon,
                 CustomRoles.Vindicator or CustomRoles.Pickpocket => CustomRoles.Mayor,
                 CustomRoles.Opportunist or CustomRoles.BloodKnight or CustomRoles.Wildling => CustomRoles.Guardian,
-                CustomRoles.Cultist or CustomRoles.Virus or CustomRoles.Gangster => CustomRoles.Admirer,
+                CustomRoles.Cultist or CustomRoles.Virus or CustomRoles.Gangster or CustomRoles.Ritualist => CustomRoles.Admirer,
                 CustomRoles.Arrogance or CustomRoles.Juggernaut or CustomRoles.Berserker => CustomRoles.Reverie,
                 CustomRoles.Baker when Baker.CurrentBread() is 0 => CustomRoles.Overseer,
                 CustomRoles.Baker when Baker.CurrentBread() is 1 => CustomRoles.Deputy,
@@ -151,12 +150,14 @@ internal class CopyCat : RoleBase
                 CustomRoles.PotionMaster when PotionMaster.CurrentPotion() is 1 => CustomRoles.Medic,
                 CustomRoles.Sacrifist => CustomRoles.Alchemist,
                 CustomRoles.MoonDancer or CustomRoles.Harvester or CustomRoles.Bandit => CustomRoles.Merchant,
-                CustomRoles.Ritualist => CustomRoles.Admirer,
                 CustomRoles.Jinx => CustomRoles.Crusader,
                 CustomRoles.Trickster or CustomRoles.Illusionist => CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate() && !BlackList(role)).ToList().RandomElement(),
                 CustomRoles.Instigator => CustomRoles.Requiter,
                 CustomRoles.Jackal => CustomRoles.ChiefOfPolice,
-                CustomRoles.Sidekick => CustomRoles.Sheriff,
+                CustomRoles.Sidekick or CustomRoles.SerialKiller => CustomRoles.Sheriff,
+                CustomRoles.Starspawn or CustomRoles.PlagueBearer => CustomRoles.Socialite,
+                CustomRoles.Demon => CustomRoles.Spy,
+                CustomRoles.Maverick => CustomRoles.Vigilante,
                 _ => role
             };
         }
@@ -224,4 +225,6 @@ internal class CopyCat : RoleBase
         hud.ReportButton.OverrideText(GetString("ReportButtonText"));
         hud.KillButton.OverrideText(GetString("CopyButtonText"));
     }
+
+    public static bool HasAddon(byte id, CustomRoles addon) => OldAddons[id].Contains(addon);
 }

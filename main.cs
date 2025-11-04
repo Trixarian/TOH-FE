@@ -53,17 +53,17 @@ public class Main : BasePlugin
     public static ConfigEntry<string> DebugKeyInput { get; private set; }
 
     public const string PluginGuid = "com.trixarian.tohfe";
-    public const string PluginVersion = "2025.0931.240.00000"; // YEAR.MMDD.VERSION.CANARYDEV
-    public const string PluginDisplayVersion = "2.4.2";
+    public const string PluginVersion = "2025.1031.241.00001"; // YEAR.MMDD.VERSION.CANARYDEV
+    public const string PluginDisplayVersion = "2.4.3";
     public static readonly List<(int year, int month, int day, int revision)> SupportedVersionAU =
     [
-        (2025, 9, 9, 0) // 2025.9.9 & 17.0.0
+        (2025, 10, 14, 0) // 2025.10.14 & 17.0.1
     ];
 
     /******************* Change one of the three variables to true before making a release. *******************/
-    public static readonly bool devRelease = false; // Latest: V2.3.0 Alpha 9
-    public static readonly bool canaryRelease = false; // Latest: V2.4.0 Beta 3
-    public static readonly bool fullRelease = true; // Latest: V2.4.1
+    public static readonly bool devRelease = false; // Discontinued, use Beta instead
+    public static readonly bool canaryRelease = false; // Latest: V2.4.1 Beta 1
+    public static readonly bool fullRelease = true; // Latest: V2.4.2
 
     public static bool hasAccess = true;
 
@@ -148,7 +148,12 @@ public class Main : BasePlugin
     public static readonly Dictionary<byte, Color32> PlayerColors = [];
     public static readonly Dictionary<byte, PlayerState.DeathReason> AfterMeetingDeathPlayers = [];
     public static readonly Dictionary<CustomRoles, string> roleColors = [];
+
+#if ANDROID
+    public static readonly string LANGUAGE_FOLDER_NAME = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Language");
+#else
     public const string LANGUAGE_FOLDER_NAME = "TOHFE-DATA/Language";
+#endif
 
     public static bool IsFixedCooldown => CustomRoles.Vampire.IsEnable() || CustomRoles.Poisoner.IsEnable();
     public static float RefixCooldownDelay = 0f;
@@ -177,7 +182,6 @@ public class Main : BasePlugin
     public static readonly Dictionary<byte, float> AllPlayerSpeed = [];
     public static readonly Dictionary<byte, float> LastAllPlayerSpeed = [];
     public static readonly HashSet<byte> PlayersDiedInMeeting = [];
-    public static readonly Dictionary<byte, long> AllKillers = [];
     public static readonly Dictionary<byte, (NetworkedPlayerInfo.PlayerOutfit outfit, string name)> OvverideOutfit = [];
     public static readonly Dictionary<byte, bool> CheckShapeshift = [];
     public static readonly Dictionary<byte, byte> ShapeshiftTarget = [];
@@ -216,9 +220,9 @@ public class Main : BasePlugin
     public static string FirstDied = ""; //Store with hash puid so things can pass through different round
     public static string FirstDiedPrevious = "";
     public static int MadmateNum = 0;
-    public static int BardCreations = 0;
     public static int MeetingsPassed = 0;
     public static long LastMeetingEnded = Utils.GetTimeStamp();
+    public static bool Daybreak;
 
 
     public static PlayerControl[] AllPlayerControls
@@ -230,7 +234,7 @@ public class Main : BasePlugin
             int i = 0;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc == null || pc.PlayerId == 255) continue;
+                if (pc == null || pc.PlayerId == 255 || pc.notRealPlayer) continue;
                 result[i++] = pc;
             }
 
@@ -250,7 +254,7 @@ public class Main : BasePlugin
             int i = 0;
             foreach (var pc in PlayerControl.AllPlayerControls)
             {
-                if (pc == null || pc.PlayerId == 255 || !pc.IsAlive() || pc.Data.Disconnected || Pelican.IsEaten(pc.PlayerId)) continue;
+                if (pc == null || pc.PlayerId == 255 || pc.notRealPlayer || !pc.IsAlive() || pc.Data == null || pc.Data.Disconnected || Pelican.IsEaten(pc.PlayerId)) continue;
                 result[i++] = pc;
             }
 
@@ -281,12 +285,12 @@ public class Main : BasePlugin
     {
         var sb = new StringBuilder();
         foreach (var title in roleColors) sb.Append($"{title.Key}:\n");
-        File.WriteAllText(@$"./{LANGUAGE_FOLDER_NAME}/templateRoleColor.dat", sb.ToString());
+        File.WriteAllText(Path.Combine(LANGUAGE_FOLDER_NAME, "templateRoleColor.dat"), sb.ToString());
     }
     public static void LoadCustomRoleColor()
     {
         const string filename = "RoleColor.dat";
-        string path = @$"./{LANGUAGE_FOLDER_NAME}/{filename}";
+        string path = Path.Combine(LANGUAGE_FOLDER_NAME, filename);
         if (File.Exists(path))
         {
             TOHFE.Logger.Info($"Load custom Role Color file：{filename}", "LoadCustomRoleColor");
@@ -396,7 +400,7 @@ public class Main : BasePlugin
             }
             if (!Directory.Exists(LANGUAGE_FOLDER_NAME)) Directory.CreateDirectory(LANGUAGE_FOLDER_NAME);
             CreateTemplateRoleColorFile();
-            if (File.Exists(@$"./{LANGUAGE_FOLDER_NAME}/RoleColor.dat"))
+            if (File.Exists(Path.Combine(LANGUAGE_FOLDER_NAME, "RoleColor.dat")))
             {
                 UpdateCustomTranslation();
                 LoadCustomRoleColor();
@@ -468,7 +472,7 @@ public class Main : BasePlugin
     }
     static void UpdateCustomTranslation()
     {
-        string path = @$"./{LANGUAGE_FOLDER_NAME}/RoleColor.dat";
+        string path = Path.Combine(LANGUAGE_FOLDER_NAME, "RoleColor.dat");
         if (File.Exists(path))
         {
             TOHFE.Logger.Info("Updating Custom Role Colors", "UpdateRoleColors");
@@ -516,7 +520,7 @@ public class Main : BasePlugin
         {
             sb.Append($"{kvp.Key.ToString()}:{kvp.Value}\n");
         }
-        File.WriteAllText(@$"./{LANGUAGE_FOLDER_NAME}/export_RoleColor.dat", sb.ToString());
+        File.WriteAllText(Path.Combine(LANGUAGE_FOLDER_NAME, "export_RoleColor.dat"), sb.ToString());
     }
 
     private void InitializeFileHash()
@@ -576,7 +580,7 @@ public class Main : BasePlugin
         //TOHFE.Logger.Disable("NotifyRoles");
         TOHFE.Logger.Disable("SwitchSystem");
         TOHFE.Logger.Disable("ModNews");
-        // TOHFE.Logger.Disable("RpcSetNamePrivate");
+        TOHFE.Logger.Disable("RpcSetNamePrivate");
         TOHFE.Logger.Disable("KnowRoleTarget");
         if (!DebugModeManager.AmDebugger)
         {
@@ -668,7 +672,9 @@ public class Main : BasePlugin
         Harmony.PatchAll();
 
         // ConsoleManager.DetachConsole();
+#if !ANDROID
         if (DebugModeManager.AmDebugger) ConsoleManager.CreateConsole();
+#endif
 
         // InitializeFileHash();
         FileHash = "drafting_2025_09_09";
@@ -906,6 +912,7 @@ public enum CustomRoles
     Lich,
     Maverick,
     Opportunist,
+    Pariah,
     Pelican,
     Pestilence,
     Pickpocket,
@@ -934,6 +941,7 @@ public enum CustomRoles
     Specter,
     Spiritcaller,
     Stalker,
+    Starspawn,
     Sunnyboy,
     Taskinator,
     Terrorist,
@@ -964,6 +972,7 @@ public enum CustomRoles
     PotionMaster,
     Ritualist,
     Sacrifist,
+    Sorceress,
     VoodooMaster,
 
     //two-way camp
@@ -1139,6 +1148,7 @@ public enum CustomWinner
 public enum AdditionalWinners
 {
     None = -1,
+    NeutralPariah = CustomRoles.Pariah,
     Lovers = CustomRoles.Lovers,
     Cupid = CustomRoles.Cupid,
     Opportunist = CustomRoles.Opportunist,

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using TOHFE.Modules;
+using TOHFE.Modules.Rpc;
 using TOHFE.Patches;
 using UnityEngine;
 using static TOHFE.Translator;
@@ -163,6 +164,24 @@ internal class ControllerManagerUpdatePatch
                 ExportCustomTranslation();
                 Main.ExportCustomRoleColors();
                 Logger.SendInGame("Exported Custom Translation and Role File");
+            }
+            // Fix Black Screen
+            if (GetKeysDown(KeyCode.F5, KeyCode.F))
+            {
+                if (AmongUsClient.Instance.AmHost)
+                {
+                    Logger.Info("Attempted to fix Black Screen", "KeyCommand");
+                    AntiBlackout.SetIsDead();
+                    Logger.SendInGame("Attempted to fix Black Screen");
+                }
+                else
+                {
+                    if (Utils.IsPlayerModerator(PlayerControl.LocalPlayer.FriendCode))
+                    {
+                        var msg = new RpcFixBlackscreen(PlayerControl.LocalPlayer.NetId);
+                        RpcUtils.LateBroadcastReliableMessage(msg);
+                    }
+                }
             }
             // Send logs
             if (GetKeysDown(KeyCode.F1, KeyCode.LeftControl))

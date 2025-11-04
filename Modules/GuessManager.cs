@@ -607,18 +607,18 @@ public static class GuessManager
             for (int i = 0; i < 20; i++)
             {
                 msg = "/";
-                if (rd.Next(1, 100) < 20)
+                if (rd.Next(100) < 20)
                 {
                     msg += "id";
                 }
                 else
                 {
                     msg += command[rd.Next(0, command.Length - 1)];
-                    msg += rd.Next(1, 100) < 50 ? string.Empty : " ";
+                    msg += rd.Next(100) < 50 ? string.Empty : " ";
                     msg += rd.Next(0, 15).ToString();
-                    msg += rd.Next(1, 100) < 50 ? string.Empty : " ";
+                    msg += rd.Next(100) < 50 ? string.Empty : " ";
                     CustomRoles role = roles.RandomElement();
-                    msg += rd.Next(1, 100) < 50 ? string.Empty : " ";
+                    msg += rd.Next(100) < 50 ? string.Empty : " ";
                     msg += Utils.GetRoleName(role);
                 }
                 var player = Main.AllAlivePlayerControls.RandomElement();
@@ -1058,6 +1058,7 @@ public static class GuessManager
                     or CustomRoles.Sloth
                     or CustomRoles.Apocalypse
                     or CustomRoles.Coven
+                    or CustomRoles.Pariah
                     || (role.IsTNA() && !Options.TransformedNeutralApocalypseCanBeGuessed.GetBool())) continue;
 
                 if (role is CustomRoles.NiceMini && Mini.Age < 18) continue;

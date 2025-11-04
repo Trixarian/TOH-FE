@@ -10,11 +10,19 @@ namespace TOHFE;
 
 public static class BanManager
 {
-    private const string DenyNameListPath = "./TOHFE-DATA/DenyName.txt";
-    private const string BanListPath = "./TOHFE-DATA/BanList.txt";
-    private const string ModeratorListPath = "./TOHFE-DATA/Moderators.txt";
-    private const string VIPListPath = "./TOHFE-DATA/VIP-List.txt";
-    private const string WhiteListListPath = "./TOHFE-DATA/WhiteList.txt";
+#if ANDROID
+    private static string DenyNameListPath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "DenyName.txt");
+    private static string BanListPath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "BanList.txt");
+    private static string ModeratorListPath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Moderators.txt");
+    private static string VIPListPath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "VIP-List.txt");
+    private static string WhiteListListPath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "WhiteList.txt");
+#else
+    private static string DenyNameListPath = "./TOHFE-DATA/DenyName.txt";
+    private static string BanListPath = "./TOHFE-DATA/BanList.txt";
+    private static string ModeratorListPath = "./TOHFE-DATA/Moderators.txt";
+    private static string VIPListPath = "./TOHFE-DATA/VIP-List.txt";
+    private static string WhiteListListPath = "./TOHFE-DATA/WhiteList.txt";
+#endif
     //private static List<string> EACList = []; // Don't make it read-only
     public static List<string> TempBanWhiteList = []; //To prevent writing to ban list
     public static List<Dictionary<string, System.Text.Json.JsonElement>> EACDict = [];
@@ -22,7 +30,11 @@ public static class BanManager
     {
         try
         {
+#if ANDROID
+            Directory.CreateDirectory(Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA"));
+#else
             Directory.CreateDirectory("TOHFE-DATA");
+#endif
 
             if (!File.Exists(BanListPath))
             {
@@ -115,27 +127,17 @@ public static class BanManager
 
         try
         {
+#if ANDROID
+            Directory.CreateDirectory(Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA"));
+#else
             Directory.CreateDirectory("TOHFE-DATA");
+#endif
             if (!File.Exists(DenyNameListPath)) File.Create(DenyNameListPath).Close();
             using StreamReader sr = new(DenyNameListPath);
             string line;
             while ((line = sr.ReadLine()) != null)
             {
                 if (line == "") continue;
-                if (line.Contains("Amogus"))
-                {
-                    AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
-                    Logger.SendInGame(string.Format(GetString("Message.KickedByDenyName"), name, line));
-                    Logger.Info($"{name}は名前が「{line}」に一致したためキックされました。", "Kick");
-                    return true;
-                }
-                if (line.Contains("Amogus V"))
-                {
-                    AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
-                    Logger.SendInGame(string.Format(GetString("Message.KickedByDenyName"), name, line));
-                    Logger.Info($"{name}は名前が「{line}」に一致したためキックされました。", "Kick");
-                    return true;
-                }
 
                 if (Regex.IsMatch(name, line))
                 {
@@ -198,7 +200,11 @@ public static class BanManager
 
         try
         {
+#if ANDROID
+            Directory.CreateDirectory(Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA"));
+#else
             Directory.CreateDirectory("TOHFE-DATA");
+#endif
             if (!File.Exists(BanListPath)) File.Create(BanListPath).Close();
             using StreamReader sr = new(BanListPath);
             string line;

@@ -133,6 +133,7 @@ public static class CustomRoleManager
         if (Spiritcaller.HasEnabled) Spiritcaller.ReduceVision(opt, player);
         if (CustomRoles.Pitfall.RoleExist()) Pitfall.SetPitfallTrapVision(opt, player);
         if (CustomRoles.Medusa.RoleExist()) Medusa.SetStoned(player, opt);
+        if (CustomRoles.Sorceress.RoleExist()) Sorceress.SetBlinded(player, opt);
         if (CustomRoles.Sacrifist.RoleExist()) Sacrifist.SetVision(player, opt);
 
 
@@ -188,6 +189,8 @@ public static class CustomRoleManager
     public static bool OnCheckMurder(ref PlayerControl killer, ref PlayerControl target, ref bool __state)
     {
         if (killer == target) return true;
+
+        Utils.CheckTresspassing(killer, target);
 
         if (target != null && target.Is(CustomRoles.Fragile))
         {

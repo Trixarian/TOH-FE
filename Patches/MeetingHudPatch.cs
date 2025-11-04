@@ -459,10 +459,7 @@ class CheckForEndVotingPatch
 
         if (CustomRoles.Bard.RoleExist())
         {
-            Main.BardCreations++;
-            try { name = ModUpdater.Get("https://v1.hitokoto.cn/?encode=text"); }
-            catch { name = GetString("ByBardGetFailed"); }
-            name += "\n\t\t——" + GetString("ByBard");
+            Bard.OnMeetingHudDestroy(ref name);
             goto EndOfSession;
         }
 
@@ -798,7 +795,7 @@ class CastVotePatch
             }
 
 
-            if (!voter.GetRoleClass().HasVoted && voter.GetRoleClass().CheckVote(voter, target) == false)
+            if (!voter.GetRoleClass().HasVoted && !Main.Daybreak && voter.GetRoleClass().CheckVote(voter, target) == false)
             {
                 Logger.Info($"Canceling {voter.GetRealName()}'s vote because of {voter.GetCustomRole()}", "CastVotePatch.RoleBase.CheckVote");
                 voter.GetRoleClass().HasVoted = true;
@@ -1052,12 +1049,12 @@ class MeetingHudStartPatch
                 Main.AllAlivePlayerControls.Where(x => x.GetRealKiller()?.PlayerId == pc.PlayerId).Do(x => MimicMsg += $"\n{x.GetNameWithRole(true)}");
         }
 
-        if (Eavesdropper.IsEnable)
-            Eavesdropper.GetMessage();
-
         if (Rat.IsEnable)
             Rat.GetMessage();
 
+        if (Eavesdropper.IsEnable)
+            Eavesdropper.GetMessage();
+            
         // Add Mimic msg
         if (MimicMsg != "")
         {
@@ -1360,6 +1357,7 @@ class MeetingHudStartPatch
         }
 
         // __instance.SortButtons();
+
     }
 }
 [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]
@@ -1489,7 +1487,7 @@ class MeetingHudOnDestroyPatch
         Logger.Info("------------End Meeting------------", "Phase");
         if (AmongUsClient.Instance.AmHost)
         {
-            AntiBlackout.SetIsDead();
+            _ = new LateTask(() => { AntiBlackout.SetIsDead(); }, 0.1f, "AntiBlackout");
 
             Main.LastVotedPlayerInfo = null;
             EAC.ReportTimes = [];

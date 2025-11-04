@@ -88,7 +88,7 @@ internal class FortuneTeller : RoleBase
                 SendMessage(string.Format(GetString("VoodooMasterTargetInMeeting"), realTarget.GetRealName()), Utils.GetPlayerListByRole(CustomRoles.VoodooMaster).First().PlayerId);
                 msg = string.Format(GetString("FortuneTellerCheck.TaskDone"), target.GetRealName(), GetString(realTarget.GetCustomRole().GetActualRoleName()));
             }
-            else if (Illusionist.IsCovIllusioned(target.PlayerId))
+            else if (target.IsDisguised())
             {
                 msg = string.Format(GetString("FortuneTellerCheck.TaskDone"), target.GetRealName(), GetString(CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate()).ToList().RandomElement().ToString()));
             }
@@ -116,7 +116,7 @@ internal class FortuneTeller : RoleBase
             }
             targetList.Add(target.PlayerId);
             var targetRole = target.GetCustomRole();
-            if (Illusionist.IsCovIllusioned(target.PlayerId)) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate() && !role.IsGhostRole()).ToList().RandomElement();
+            if (target.IsDisguised()) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate() && !role.IsGhostRole()).ToList().RandomElement();
             else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCoven()).ToList().RandomElement();
             else if (target.Is(CustomRoles.Narc)) targetRole = CustomRoles.Sheriff;
 
@@ -144,12 +144,12 @@ internal class FortuneTeller : RoleBase
         }
         else
         {
-            List<CustomRoles[]> completeRoleList = EnumHelper.Achunk<CustomRoles>(chunkSize: 6, shuffle: true, exclude: (x) => !x.IsGhostRole() && !x.IsAdditionRole() && !x.IsVanilla() && x is not CustomRoles.NotAssigned and not CustomRoles.ChiefOfPolice and not CustomRoles.Killer and not CustomRoles.GM and not CustomRoles.Apocalypse and not CustomRoles.Coven);
+            List<CustomRoles[]> completeRoleList = EnumHelper.Achunk<CustomRoles>(chunkSize: 6, shuffle: true, exclude: (x) => !x.IsGhostRole() && !x.IsAdditionRole() && !x.IsVanilla() && x is not CustomRoles.NotAssigned and not CustomRoles.ChiefOfPolice and not CustomRoles.Killer and not CustomRoles.GM and not CustomRoles.Apocalypse and not CustomRoles.Coven and not CustomRoles.Pariah);
 
             var targetRole = target.GetCustomRole();
             string text = string.Empty;
 
-            if (Illusionist.IsCovIllusioned(target.PlayerId)) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate() && !role.IsGhostRole()).ToList().RandomElement();
+            if (target.IsDisguised()) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCrewmate() && !role.IsGhostRole()).ToList().RandomElement();
             else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) targetRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCoven()).ToList().RandomElement();
             else if (target.Is(CustomRoles.Narc)) targetRole = CustomRoles.Sheriff;
 

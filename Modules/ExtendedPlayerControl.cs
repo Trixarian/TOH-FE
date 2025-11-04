@@ -361,6 +361,7 @@ static class ExtendedPlayerControl
     }
     public static void RpcSetNameEx(this PlayerControl player, string name)
     {
+        name = name.Replace("color=", string.Empty);
         foreach (var seer in Main.AllPlayerControls)
         {
             Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
@@ -374,28 +375,29 @@ static class ExtendedPlayerControl
     {
         //player: player whose name needs to be changed
         //seer: player who can see name changes
-        //seer: player who can see name changes
         if (player == null || name == null || !AmongUsClient.Instance.AmHost) return;
         if (seer == null) seer = player;
 
+        name = name.Replace("color=", string.Empty);
+        Logger.Info($"Call:{player?.Data?.PlayerName}{player.PlayerId}:{Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)]} => {name} for {seer?.GetNameWithRole()?.RemoveHtmlTags()}{seer.PlayerId}", "RpcSetNamePrivate");
+
         if (!force && Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] == name)
         {
-            //Logger.info($"Cancel:{player.name}:{name} for {seer.name}", "RpcSetNamePrivate");
+            Logger.Info($"Cancel", "RpcSetNamePrivate");
             return;
         }
         Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
-        Logger.Info($"Set:{player?.Data?.PlayerName}:{name} for {seer.GetNameWithRole().RemoveHtmlTags()}", "RpcSetNamePrivate");
-
-        if (seer == null || player == null) return;
+        Logger.Info($"Cached", "RpcSetNamePrivate");
 
         var leftPlayer = OnPlayerLeftPatch.LeftPlayerId;
-        if (seer.PlayerId == leftPlayer || player.PlayerId == leftPlayer) return;
+        if (seer?.PlayerId == leftPlayer || player?.PlayerId == leftPlayer) return;
 
         var clientId = seer.GetClientId();
         if (clientId == -1) return;
 
         var message = new RpcSetNameMessage(player.NetId, player.Data.NetId, name);
         RpcUtils.LateSpecificSendMessage(message, clientId, SendOption.Reliable);
+        Logger.Info($"Set", "RpcSetNamePrivate");
     }
 
     public static void RpcEnterVentDesync(this PlayerPhysics physics, int ventId, PlayerControl seer)
@@ -1004,7 +1006,14 @@ static class ExtendedPlayerControl
             Logger.Warn($"{callerClassName}.{callerMethodName} tried to get CustomSubRole, but the target was null", "GetCustomRole");
             return [CustomRoles.NotAssigned];
         }
-        return Main.PlayerStates.TryGetValue(player.PlayerId, out var State) ? State.SubRoles : [CustomRoles.NotAssigned];
+        if (Main.PlayerStates.TryGetValue(player.PlayerId, out var State))
+        {
+            if (CopyCat.playerIdList.Contains(player.PlayerId)) return [.. State.SubRoles, .. CopyCat.OldAddons[player.PlayerId]];
+
+            return State.SubRoles;
+        }
+
+        return  [CustomRoles.NotAssigned];
     }
     public static CountTypes GetCountTypes(this PlayerControl player)
     {
@@ -1245,7 +1254,7 @@ static class ExtendedPlayerControl
                         break;
 
                     case CustomRoles.Overclocked:
-                        Main.AllPlayerKillCooldown[player.PlayerId] -= Main.AllPlayerKillCooldown[player.PlayerId] * ((1 - Overclocked.OverclockedReduction.GetFloat()) / 100);
+                        Main.AllPlayerKillCooldown[player.PlayerId] -= Main.AllPlayerKillCooldown[player.PlayerId] * (Overclocked.OverclockedReduction.GetFloat() / 100);
                         break;
 
                     case CustomRoles.Diseased:
@@ -1362,6 +1371,7 @@ static class ExtendedPlayerControl
     public static bool IsNeutralBenign(this PlayerControl player) => player.GetCustomRole().IsNB();
     public static bool IsNeutralEvil(this PlayerControl player) => player.GetCustomRole().IsNE();
     public static bool IsNeutralChaos(this PlayerControl player) => player.GetCustomRole().IsNC();
+    public static bool IsNeutralParaih(this PlayerControl player) => player.GetCustomRole().IsNP();
     public static bool IsNeutralApocalypse(this PlayerControl player) => player.GetCustomRole().IsNA();
     public static bool IsTransformedNeutralApocalypse(this PlayerControl player) => player.GetCustomRole().IsTNA();
     public static bool IsNonNeutralKiller(this PlayerControl player) => player.GetCustomRole().IsNonNK();
@@ -1668,6 +1678,8 @@ static class ExtendedPlayerControl
     }
     ///<summary>Is the player currently protected</summary>
     public static bool IsProtected(this PlayerControl self) => self.protectedByGuardianId > -1;
+
+    public static bool IsDisguised(this PlayerControl player) => Illusionist.IsCovIllusioned(player.PlayerId) || player.Is(CustomRoles.Trickster);
 
     public const MurderResultFlags ResultFlags = MurderResultFlags.Succeeded; //No need for DecisonByHost
     public static SendOption RpcSendOption => Main.CurrentServerIsVanilla && Options.BypassRateLimitAC.GetBool() ? SendOption.None : SendOption.Reliable;

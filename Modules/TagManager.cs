@@ -6,7 +6,11 @@ namespace TOHFE;
 
 public static class TagManager
 {
+#if ANDROID
+    private static readonly string TAGS_FILE_PATH = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Tags");
+#else
     private static readonly string TAGS_FILE_PATH = "./TOHFE-DATA/Tags";
+#endif
 
     public static void Init()
     {
@@ -17,13 +21,21 @@ public static class TagManager
     {
         try
         {
-            if (!Directory.Exists(@"TOHFE-DATA/Tags")) Directory.CreateDirectory(@"TOHFE-DATA/Tags");
+#if ANDROID
+            string dataDirectory = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Tags");
+            string templateFilePath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Tags", "Tag_Template.txt");
+#else
+            string dataDirectory = @"TOHFE-DATA/Tags";
+            string templateFilePath = @"./TOHFE-DATA/Tags/Tag_Template.txt";
+#endif
+
+            if (!Directory.Exists(dataDirectory)) Directory.CreateDirectory(dataDirectory);
             var defaultTagMsg = GetResourcesTxt($"TOHFE.Resources.Config.TagTemplate.txt");
-            if (!File.Exists(@"./TOHFE-DATA/Tags/Tag_Template.txt")) // Default tag
+            if (!File.Exists(templateFilePath)) // Default tag
             {
-                using FileStream fs = File.Create(@"./TOHFE-DATA/Tags/Tag_Template.txt");
+                using FileStream fs = File.Create(templateFilePath);
             }
-            File.WriteAllText(@"./TOHFE-DATA/Tags/Tag_Template.txt", defaultTagMsg); // Overwriting default template
+            File.WriteAllText(templateFilePath, defaultTagMsg); // Overwriting default template
         }
         catch (Exception ex)
         {

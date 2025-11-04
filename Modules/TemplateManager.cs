@@ -10,7 +10,12 @@ namespace TOHFE;
 
 public static class TemplateManager
 {
+#if ANDROID
+    private static readonly string TEMPLATE_FILE_PATH = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "template.txt");
+#else
     private static readonly string TEMPLATE_FILE_PATH = "./TOHFE-DATA/template.txt";
+#endif
+
     private static readonly Dictionary<string, Func<string>> _replaceDictionaryNormalOptions = new()
     {
         ["RoomCode"] = () => InnerNet.GameCode.IntToGameName(AmongUsClient.Instance.GameId),
@@ -105,14 +110,25 @@ public static class TemplateManager
                     _ => "English"
                 };
             else fileName = "English";
-            if (!Directory.Exists(@"TOHFE-DATA")) Directory.CreateDirectory(@"TOHFE-DATA");
+
+#if ANDROID
+            string dataDirectory = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA");
+            string defaultTemplatePath = Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "Default_Teamplate.txt");
+#else
+        string dataDirectory = @"TOHFE-DATA";
+        string defaultTemplatePath = @"./TOHFE-DATA/Default_Teamplate.txt";
+#endif
+
+            if (!Directory.Exists(dataDirectory)) Directory.CreateDirectory(dataDirectory);
             var defaultTemplateMsg = GetResourcesTxt($"TOHFE.Resources.Config.template.{fileName}.txt");
-            if (!File.Exists(@"./TOHFE-DATA/Default_Teamplate.txt")) //default template
+
+            if (!File.Exists(defaultTemplatePath))
             {
                 Logger.Warn("Creating Default_Template.txt", "TemplateManager");
-                using FileStream fs = File.Create(@"./TOHFE-DATA/Default_Teamplate.txt");
+                using FileStream fs = File.Create(defaultTemplatePath);
             }
-            File.WriteAllText(@"./TOHFE-DATA/Default_Teamplate.txt", defaultTemplateMsg); //overwriting default template
+            File.WriteAllText(defaultTemplatePath, defaultTemplateMsg);
+
             if (!File.Exists(TEMPLATE_FILE_PATH))
             {
                 if (File.Exists(@"./template.txt")) File.Move(@"./template.txt", TEMPLATE_FILE_PATH);

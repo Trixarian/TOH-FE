@@ -74,12 +74,22 @@ public class ModUpdater
         }
     }
 
+#if ANDROID
+    static string RegionConfigPath = Path.Combine(UnityEngine.Application.persistentDataPath, "BepInEx", "config", "at.duikbo.regioninstall.cfg");
+    static string MiniRegionInstallPath = Path.Combine(UnityEngine.Application.persistentDataPath, "BepInEx", "plugins", "Mini.RegionInstall.dll");
+#else
     const string RegionConfigPath = "./BepInEx/config/at.duikbo.regioninstall.cfg";
     const string MiniRegionInstallPath = "./BepInEx/plugins/Mini.RegionInstall.dll";
+#endif
+
     const string RegionConfigResource = "TOHFE.Resources.at.duikbo.regioninstall.cfg";
     const string MiniRegionInstallResource = "TOHFE.Resources.Mini.RegionInstall.dll";
     private static void CheckCustomRegions()
     {
+#if ANDROID
+        Logger.Info($"Skip check on Android platform", "CheckCustomRegions");
+        return;
+#endif
         var regions = ServerManager.Instance.AvailableRegions;
         var hasCustomRegions = false;
         var forceUpdate = false;
@@ -224,14 +234,14 @@ public class ModUpdater
         else
         {
             string[] tag = data["tag_name"]?.ToString()[1..].Split(".");
-            Logger.Info($"{tag[0]}.{tag[1]}.{tag[2]}", "PluginVersion");
-            Logger.Info($"{Main.PluginVersion.Substring(10, 1)}.{Main.PluginVersion.Substring(11, 1)}.{Main.PluginVersion.Substring(12, 1)}.{Main.PluginVersion.Substring(14, 3)}", "PluginVersion");
-
+            
             var betaNum = int.Parse(Main.PluginVersion.Substring(14, 3), CultureInfo.InvariantCulture);
             betaNum = betaNum == 0 ? 999 : betaNum;
 
             var pluginNum = int.Parse(Main.PluginVersion.Substring(10, 1)) * 10000000 + int.Parse(Main.PluginVersion.Substring(11, 1)) * 1000000 + int.Parse(Main.PluginVersion.Substring(12, 1)) * 100000 + betaNum * 100;
-            var versionNum = int.Parse(tag[0]) * 10000000 + int.Parse(tag[1]) * 1000000 + int.Parse($"{tag[2][0]}") * 100000 + (tag[2][1] == 'b' ? int.Parse(tag[2][2..]) : 999) * 100;
+            var versionNum = int.Parse(tag[0]) * 10000000 + int.Parse(tag[1]) * 1000000 + int.Parse($"{tag[2][0]}") * 100000 + (tag[2].Length > 1 && tag[2][1] == 'b' ? int.Parse(tag[2][2..]) : 999) * 100;
+
+            Logger.Info($"Found local version: {pluginNum}; github version: {versionNum}", "CheckRelease");
 
             hasUpdate = versionNum > pluginNum;
 
@@ -274,20 +284,33 @@ public class ModUpdater
     }
     public static void StartUpdate(string url)
     {
-        ShowPopup(GetString("updatePleaseWait"), StringNames.Cancel, false);
-        Task.Run(() => DownloadDLLAsync(url));
+#if ANDROID
+        ShowPopup(GetString("AndroidUpdateNotSupported"), StringNames.Close, true, InfoPopup.Close);
+        Logger.Warn("Update download is not supported on Android platform", "StartUpdate");
         return;
+#else
+    ShowPopup(GetString("updatePleaseWait"), StringNames.Cancel, false);
+    Task.Run(() => DownloadDLLAsync(url));
+    return;
+#endif
     }
     public static bool NewVersionCheck()
     {
         try
         {
             var fileName = Assembly.GetExecutingAssembly().Location;
-            if (Directory.Exists("TOH_DATA") && File.Exists(@"./TOHFE-DATA/BanWords.txt"))
+#if ANDROID
+            if (Directory.Exists(Path.Combine(UnityEngine.Application.persistentDataPath, "TOH_DATA")) &&
+                File.Exists(Path.Combine(UnityEngine.Application.persistentDataPath, "TOHFE-DATA", "BanWords.txt")))
             {
-                DirectoryInfo di = new("TOH_DATA");
+                DirectoryInfo di = new(Path.Combine(UnityEngine.Application.persistentDataPath, "TOH_DATA"));
+#else
+        if (Directory.Exists("TOH_DATA") && File.Exists(@"./TOHFE-DATA/BanWords.txt"))
+        {
+            DirectoryInfo di = new("TOH_DATA");
+#endif
                 di.Delete(true);
-                Logger.Warn("Deleting old data´╝ÜTOH_DATA", "NewVersionCheck");
+                Logger.Warn("Deleting old data：TOH_DATA", "NewVersionCheck");
             }
         }
         catch (Exception ex)

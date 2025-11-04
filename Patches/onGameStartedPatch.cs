@@ -12,6 +12,7 @@ using TOHFE.Patches;
 using TOHFE.Roles.Core;
 using TOHFE.Roles.Core.AssignManager;
 using TOHFE.Roles.Core.DraftAssign;
+using TOHFE.Roles.Crewmate;
 using UnityEngine;
 using static TOHFE.Translator;
 
@@ -75,7 +76,7 @@ internal class ChangeRoleSettings
 
             Main.CheckShapeshift.Clear();
             Main.ShapeshiftTarget.Clear();
-            Main.AllKillers.Clear();
+            Witness.AllMurderTresspass.Clear();
             Main.OverDeadPlayerList.Clear();
             Main.UnShapeShifter.Clear();
             Main.DeadPassedMeetingPlayers.Clear();
@@ -88,7 +89,6 @@ internal class ChangeRoleSettings
             Main.FirstDiedPrevious = Options.CurrentGameMode == CustomGameMode.Standard && Options.ShieldPersonDiedFirst.GetBool() ? Main.FirstDied : "";
             Main.FirstDied = "";
             Main.MadmateNum = 0;
-            Main.BardCreations = 0;
             Main.MeetingsPassed = 0;
             Main.MeetingIsStarted = false;
             Main.IntroDestroyed = false;
